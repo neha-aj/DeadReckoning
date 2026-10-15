@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#03060b">
+  <meta name="description" content="Offline survival navigator for two survivors crossing zombie-infested Bengaluru to the last evacuation beacon.">
+  <title>Dead Reckoning</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="vendor/fonts.css">
+  <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <div id="map" aria-label="Offline map of central Bengaluru"></div>
+  <div class="scan"></div>
+
+  <header id="hud">
+    <div class="brand"><div class="logo"></div><div><b>DEAD RECKONING</b><small id="whoami">OFFLINE · BENGALURU</small></div></div>
+    <div class="chip beacon" id="c-beacon" title="Time until the settlement gates close for today"><label>Gates close in</label><div class="v">--:--</div></div>
+    <div class="chip" id="c-survive" title="How long your supplies last at walking pace"><label>Supplies last</label><div class="v">--</div></div>
+    <div class="chip opt" id="c-clock"><label>Day · time</label><div class="v">--</div></div>
+    <div class="chip opt" id="c-batt"><label>Phone</label><div class="v">--</div></div>
+    <div class="chip opt" id="c-net"><label>Signal</label><div class="v">--</div></div>
+    <div class="spacer"></div>
+    <div class="simctl" title="Simulation clock (demo)">
+      <button id="b-play" class="drill-only" aria-label="Run or pause drill time">▶</button>
+      <select id="b-speed" class="drill-only" aria-label="Drill time speed"><option value="1">1×</option><option value="30">30×</option><option value="60" selected>60×</option><option value="180">180×</option></select>
+      <button class="bell" id="b-alerts" aria-label="Alerts">🔔<span class="n hidden">0</span></button>
+      <button id="b-settings" aria-label="Settings">⚙</button>
+    </div>
+  </header>
+
+  <div id="sentinel" role="status" aria-live="polite">
+    <div class="eye"></div>
+    <div><div class="who">SENTINEL · SURVIVAL ADVISOR</div><div class="msg">Booting…</div></div>
+    <div class="count"></div>
+  </div>
+
+  <div id="mapctl">
+    <button id="m-me" title="Centre on us">◎</button>
+    <button id="m-pos" title="Set my position (tap the map)">📍</button>
+    <button id="m-scan" title="Scan a survivor's ID card">▣</button>
+    <button id="m-fit" title="Show whole route">⤢</button>
+    <button id="m-places" class="on" title="Show supply places">▦</button>
+    <button id="m-intel" class="on" title="Show intel danger zones">☢</button>
+    <button id="m-legend" title="What do the colours mean?">?</button>
+  </div>
+  <button class="fab" id="fab-report">⚠ REPORT</button>
+  <button class="fab drill-only" id="fab-chaos" title="Drill: drop a practice horde on your route">🎲 <span class="opt-l">SPAWN&nbsp;</span>HORDE</button>
+  <button class="fab" id="fab-sos">SOS</button>
+  <div id="placing" class="hidden">Tap the map to place it</div>
+
+  <aside id="panel">
+    <div class="handle" id="handle"></div>
+    <nav id="tabs">
+      <button data-tab="route" class="on"><i>🧭</i><span>ROUTE</span></button>
+      <button data-tab="supplies"><i>▦</i><span>SUPPLY</span></button>
+      <button data-tab="pack"><i>🎒</i><span>PACK</span></button>
+      <button data-tab="crew"><i>👥</i><span>CREW</span></button>
+      <button data-tab="intel"><i>☢</i><span>INTEL</span></button>
+      <button data-tab="guide"><i>📖</i><span>GUIDE</span></button>
+    </nav>
+    <div class="tabbody" id="tab-route"></div>
+    <div class="tabbody hidden" id="tab-supplies"></div>
+    <div class="tabbody hidden" id="tab-pack"></div>
+    <div class="tabbody hidden" id="tab-crew"></div>
+    <div class="tabbody hidden" id="tab-intel"></div>
+    <div class="tabbody hidden" id="tab-guide"></div>
+  </aside>
+
+  <div id="modal" class="hidden"></div>
+  <div id="toast"></div>
+
+  <script src="vendor/leaflet.js"></script>
+  <script src="vendor/qrcode.js"></script>
+  <script src="vendor/jsQR.js"></script>
+  <script src="js/data/map.js"></script>
+  <script src="js/data/intel.js"></script>
+  <script src="js/data/catalog.js"></script>
+  <script src="js/data/guide.js"></script>
+  <script src="js/account.js"></script>
+  <script src="js/geo.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/route.js"></script>
+  <script src="js/mapview.js"></script>
+  <script src="js/comms.js"></script>
+  <script src="js/sentinel.js"></script>
+  <script src="js/community.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/ui-crew.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

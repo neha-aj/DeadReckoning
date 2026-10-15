@@ -1,0 +1,9 @@
+{
+  "note": "Intel sync source. While any connection exists the app pulls this file and merges new reports. Replace with a live aggregator (news RSS, social search, official alerts) in a real deployment.",
+  "reports": [
+    { "id": "s01", "kind": "report", "src": "X", "who": "@palace_rd_resident", "t": 26364, "lat": 12.9925, "lng": 77.5862, "r": 200, "sev": 0.55, "cred": 0.55,
+      "text": "Group of infected wandering along Palace Road near the Mount Carmel junction. Moving slowly north." },
+    { "id": "s02", "kind": "safe", "src": "FM radio", "who": "Settlement broadcast", "t": 26392, "lat": 12.9905, "lng": 77.5915, "r": 260, "sev": 0.6, "cred": 0.9,
+      "text": "Settlement guards are watching the Jayamahal Road gate of Palace Grounds. Approach from the south, hands visible, and knock three times." }
+  ]
+}

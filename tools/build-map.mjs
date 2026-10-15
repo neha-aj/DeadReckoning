@@ -1,0 +1,104 @@
+// Turns the raw Overpass extracts into one compact offline map file:
+//   js/data/map.js  ->  window.DR_MAP = { bbox, N, W, NM, P, A }
+// Run after fetch-osm.mjs:  node tools/build-map.mjs
+// Data © OpenStreetMap contributors (ODbL).
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const raw = n => JSON.parse(readFileSync(join(root, 'data', `raw_${n}.json`), 'utf8')).elements;
+const BBOX = [12.955, 77.560, 13.010, 77.620];
+const E5 = v => Math.round(v * 1e5);
+
+// ---------- roads -> node table + ways ----------
+const CLASS = {
+  trunk: 0, trunk_link: 0, primary: 0, primary_link: 0,
+  secondary: 1, secondary_link: 1,
+  tertiary: 2, tertiary_link: 2, unclassified: 2,
+  residential: 3, living_street: 3,
+};
+const ways = raw('roads').filter(w => w.geometry && CLASS[w.tags.highway] !== undefined);
+
+// union-find over OSM node ids to keep only the largest connected road network
+const parent = new Map();
+const find = x => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
+const union = (a, b) => { const ra = find(a), rb = find(b); if (ra !== rb) parent.set(ra, rb); };
+for (const w of ways) for (const id of w.nodes) if (!parent.has(id)) parent.set(id, id);
+for (const w of ways) for (let i = 1; i < w.nodes.length; i++) union(w.nodes[i - 1], w.nodes[i]);
+const size = new Map();
+for (const id of parent.keys()) { const r = find(id); size.set(r, (size.get(r) || 0) + 1); }
+const main = [...size.entries()].sort((a, b) => b[1] - a[1])[0][0];
+
+const nodeIndex = new Map();
+const N = [];
+const names = [''];
+const nameIndex = new Map([['', 0]]);
+const nameId = s => { s = s || ''; if (!nameIndex.has(s)) { nameIndex.set(s, names.length); names.push(s); } return nameIndex.get(s); };
+const W = [];
+for (const w of ways) {
+  if (find(w.nodes[0]) !== main) continue;
+  const refs = [];
+  w.nodes.forEach((id, i) => {
+    if (!nodeIndex.has(id)) {
+      nodeIndex.set(id, N.length / 2);
+      N.push(E5(w.geometry[i].lat), E5(w.geometry[i].lon));
+    }
+    refs.push(nodeIndex.get(id));
+  });
+  W.push([CLASS[w.tags.highway], nameId(w.tags.name || w.tags['name:en'] || w.tags.ref), ...refs]);
+}
+
+// ---------- places -> supply caches ----------
+// category codes: MED FOOD WATER TOOL GEAR POWER SHEL
+const CAT = {
+  pharmacy: 'MED', chemist: 'MED', medical_supply: 'MED', hospital: 'MED', clinic: 'MED', doctors: 'MED',
+  supermarket: 'FOOD', convenience: 'FOOD', greengrocer: 'FOOD', grocery: 'FOOD', bakery: 'FOOD', butcher: 'FOOD',
+  general: 'FOOD', kiosk: 'FOOD', marketplace: 'FOOD', department_store: 'FOOD', mall: 'FOOD',
+  drinking_water: 'WATER', water: 'WATER', beverages: 'WATER',
+  hardware: 'TOOL', doityourself: 'TOOL', sports: 'TOOL', outdoor: 'TOOL',
+  clothes: 'GEAR', shoes: 'GEAR',
+  electronics: 'POWER', mobile_phone: 'POWER', fuel: 'POWER',
+  police: 'SHEL', fire_station: 'SHEL', school: 'SHEL', college: 'SHEL', university: 'SHEL',
+  community_centre: 'SHEL', place_of_worship: 'SHEL', shelter: 'SHEL', station: 'SHEL', subway: 'SHEL', bus_station: 'SHEL',
+};
+const subs = [];
+const subId = s => { let i = subs.indexOf(s); if (i < 0) { i = subs.length; subs.push(s); } return i; };
+const P = [];
+const seen = new Set();
+for (const e of raw('pois')) {
+  const t = e.tags;
+  const sub = t.station === 'subway' ? 'subway' : (t.railway === 'station' ? 'station' : (t.amenity && CAT[t.amenity] ? t.amenity : t.shop));
+  const cat = CAT[sub];
+  if (!cat) continue;
+  const lat = e.lat ?? e.center?.lat, lon = e.lon ?? e.center?.lon;
+  if (lat == null || lat < BBOX[0] || lat > BBOX[2] || lon < BBOX[1] || lon > BBOX[3]) continue;
+  const key = `${sub}|${E5(lat) >> 4}|${E5(lon) >> 4}`;
+  if (seen.has(key)) continue;
+  seen.add(key);
+  P.push([cat, subId(sub), t.name || t['name:en'] || '', E5(lat), E5(lon)]);
+}
+
+// ---------- areas: parks / water / military (for the look of the map) ----------
+const AT = { park: 'G', garden: 'G', grass: 'G', recreation_ground: 'G', common: 'G', golf_course: 'G', pitch: 'G', stadium: 'S', sports_centre: 'S', water: 'B', military: 'M' };
+const A = [];
+for (const e of raw('areas')) {
+  const t = AT[e.tags.leisure] || AT[e.tags.natural] || AT[e.tags.landuse];
+  if (!t || !e.geometry || e.geometry.length < 4) continue;
+  const pts = [];
+  let last = '';
+  for (const g of e.geometry) {
+    const k = `${Math.round(g.lat * 1e4)},${Math.round(g.lon * 1e4)}`;
+    if (k === last) continue;
+    last = k;
+    pts.push(E5(g.lat), E5(g.lon));
+  }
+  if (pts.length >= 6) A.push([t, e.tags.name || '', ...pts]);
+}
+
+const out = { bbox: BBOX, subs, N, W, NM: names, P, A, attribution: '© OpenStreetMap contributors (ODbL)' };
+mkdirSync(join(root, 'js', 'data'), { recursive: true });
+const js = `/* Offline map of central Bengaluru. Generated by tools/build-map.mjs. ${out.attribution} */\nwindow.DR_MAP=${JSON.stringify(out)};\n`;
+writeFileSync(join(root, 'js', 'data', 'map.js'), js);
+console.log(`nodes ${N.length / 2}, ways ${W.length}, names ${names.length}, places ${P.length}, areas ${A.length}, ${(js.length / 1024).toFixed(0)} KB`);
+const byCat = {}; for (const p of P) byCat[p[0]] = (byCat[p[0]] || 0) + 1; console.log(byCat);
