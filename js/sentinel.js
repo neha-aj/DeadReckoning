@@ -104,7 +104,10 @@
     return out;
   };
 
+  sn.hidden = false;
+  sn.hide = on => { sn.hidden = on; sn.render(); };
   sn.alert = (lvl, text) => {
+    if (lvl === 'danger') sn.hidden = false;   // a real danger always shows again
     const s = DR.state;
     if (s.alerts[0] && s.alerts[0].text === text && s.clock - s.alerts[0].ts < 60) return;   // never the same line twice in a row
     s.alerts.unshift({ id: DR.uid(), lvl, text, ts: s.clock });
@@ -131,10 +134,11 @@
   sn.list = () => list;
   sn.render = () => {
     const el = document.getElementById('sentinel');
-    if (!list.length) return;
+    if (!list.length) { el.classList.toggle('hidden', sn.hidden); return; }
     const top = list.filter(x => x.lvl === list[0].lvl);
     const a = top[idx % top.length];
     el.className = a.lvl === 'info' ? '' : a.lvl;
+    el.classList.toggle('hidden', sn.hidden);
     el.querySelector('.msg').textContent = a.text;
     el.querySelector('.count').textContent = list.length > 1 ? `+${list.length - 1}` : '';
   };

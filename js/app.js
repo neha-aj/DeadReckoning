@@ -242,7 +242,30 @@
     document.getElementById('m-intel').onclick = e => { const on = e.currentTarget.classList.toggle('on'); mv.setVisible('intel', on); };
     document.getElementById('m-legend').onclick = () => ui.legend();
     document.getElementById('m-scan').onclick = () => ui.scanPeople();
-    document.getElementById('handle').onclick = () => document.getElementById('panel').classList.toggle('max');
+    document.getElementById('sen-x').onclick = e => { e.stopPropagation(); DR.sentinel.hide(true); ui.toast('Advisor hidden. It returns for real dangers; tap 🔔 to read it.'); };
+    document.getElementById('b-alerts').addEventListener('click', () => DR.sentinel.hide(false));
+    // phone bottom sheet: drag the handle; snaps to tabs-only (full map), half, or nearly full screen
+    const root = document.documentElement, handle = document.getElementById('handle'), panel = document.getElementById('panel');
+    const snaps = () => [document.getElementById('tabs').offsetHeight + 26, innerHeight * 0.46, innerHeight * 0.88];
+    let dragY = null, startH = 0, moved = false;
+    const setSheet = (h, anim) => {
+      document.body.classList.toggle('sheet-anim', !!anim);
+      const [lo, , hi] = snaps(); h = Math.max(lo, Math.min(hi, h));
+      root.style.setProperty('--sheet', h + 'px');
+      document.body.classList.toggle('sheet-min', h <= lo + 4);
+      setTimeout(() => mv.map.invalidateSize(), anim ? 240 : 0);
+    };
+    const snapTo = h => { const sn = snaps(); setSheet(sn.reduce((a, b) => Math.abs(b - h) < Math.abs(a - h) ? b : a), true); };
+    app.sheet = which => { const sn = snaps(); setSheet(sn[{ min: 0, half: 1, max: 2 }[which]], true); };
+    handle.addEventListener('pointerdown', e => { if (innerWidth > 860) return; dragY = e.clientY; startH = panel.offsetHeight; moved = false; handle.setPointerCapture(e.pointerId); });
+    handle.addEventListener('pointermove', e => { if (dragY == null) return; if (Math.abs(e.clientY - dragY) > 4) moved = true; if (moved) setSheet(startH + (dragY - e.clientY), false); });
+    handle.addEventListener('pointerup', () => {
+      if (dragY == null) return; dragY = null;
+      if (!moved) { const sn = snaps(), cur = panel.offsetHeight; app.sheet(cur <= sn[0] + 4 ? 'half' : 'min'); return; }   // tap: map ⇄ panel
+      snapTo(panel.offsetHeight);
+    });
+    // opening any tab while the sheet is collapsed brings it back up
+    document.getElementById('tabs').addEventListener('click', () => { if (innerWidth <= 860 && document.body.classList.contains('sheet-min')) app.sheet('half'); });
     addEventListener('online', () => { ui.hud(); ui.render(); });
     addEventListener('offline', () => { ui.hud(); ui.render(); ui.toast('📵 Network lost. Everything keeps working.'); });
 

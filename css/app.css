@@ -2,6 +2,7 @@
    Dark on purpose: saves OLED battery and does not light up your face at night.
    Cyan = map & system, amber = the beacon / your route, red = danger only, green = safe only. */
 :root {
+  --sheet: 46vh;   /* phone bottom-sheet height, dragged by the handle */
   --bg: #03060b;
   --panel: rgba(7, 13, 22, 0.88);
   --panel-2: rgba(12, 22, 36, 0.9);
@@ -275,27 +276,29 @@ canvas.qr { display: block; margin: 12px auto; width: min(320px, 100%); image-re
 /* ---------- phones ---------- */
 @media (max-width: 860px) {
   :root { --panel-w: 0px; }
-  #map, .scan, .grid-bg { right: 0; bottom: 46vh; }
-  #panel { top: auto; height: 46vh; width: 100%; border-left: 0; border-top: 1px solid var(--line-2); border-radius: 18px 18px 0 0; transition: height .25s; }
-  #panel.max { height: 88vh; }
-  .handle { display: block; width: 46px; height: 5px; border-radius: 3px; background: var(--line-2); margin: 8px auto 0; flex: none; }
+  #map, .scan, .grid-bg { right: 0; bottom: var(--sheet); }
+  #panel { top: auto; height: var(--sheet); width: 100%; border-left: 0; border-top: 1px solid var(--line-2); border-radius: 18px 18px 0 0; }
+  body.sheet-anim #panel, body.sheet-anim #map, body.sheet-anim .fab, body.sheet-anim #mapctl, body.sheet-anim #sentinel { transition: height .22s, bottom .22s; }
+  .handle { display: block; flex: none; height: 26px; margin: 0; cursor: grab; touch-action: none; position: relative; }
+  .handle::after { content: ''; position: absolute; left: 50%; top: 10px; width: 52px; height: 6px; margin-left: -26px; border-radius: 3px; background: var(--line-2); }
+  body.sheet-min .tabbody { visibility: hidden; }
   #tabs button { padding: 8px 2px; } #tabs button span { font-size: 10px; letter-spacing: .1em; }
   #hud { right: 10px; top: 8px; flex-wrap: wrap; gap: 6px; }
   .brand small, .chip.opt { display: none; }
   .brand { padding: 6px 10px; } .brand b { font-size: 11px; }
   .chip { min-width: 0; padding: 4px 9px; } .chip .v { font-size: 14px; } .chip label { font-size: 9px; }
   .spacer { display: none; }
-  #sentinel { top: auto; bottom: calc(46vh + 70px); left: 8px; right: 60px; max-width: none; padding: 8px 10px; }
+  #sentinel { top: auto; bottom: calc(var(--sheet) + 70px); left: 8px; right: 60px; max-width: none; padding: 8px 10px; }
   #sentinel .who { display: none; }
   .opt-l { display: none; }
   #sentinel .msg { font-size: 14px; }
-  #mapctl { right: 8px; bottom: calc(46vh + 140px); }
+  #mapctl { right: 8px; bottom: calc(var(--sheet) + 140px); }
   #mapctl button { width: 40px; height: 40px; }
   .fab { height: 46px; padding: 0 14px; font-size: 13px; }
-  #fab-report { bottom: calc(46vh + 12px); left: 8px; }
-  #fab-chaos { bottom: calc(46vh + 12px); left: 130px; padding: 0 12px; font-size: 12px; }
-  #fab-sos { bottom: calc(46vh + 12px); right: 8px; width: 64px; }
-  #toast { transform: translateX(-50%); bottom: calc(46vh + 70px); }
+  #fab-report { bottom: calc(var(--sheet) + 12px); left: 8px; }
+  #fab-chaos { bottom: calc(var(--sheet) + 12px); left: 130px; padding: 0 12px; font-size: 12px; }
+  #fab-sos { bottom: calc(var(--sheet) + 12px); right: 8px; width: 64px; }
+  #toast { transform: translateX(-50%); bottom: calc(var(--sheet) + 70px); }
   #placing { transform: translate(-50%, -50%); }
 }
 
@@ -321,3 +324,6 @@ label.small .input { margin-top: 4px; }
 body.drill .brand { border-color: var(--amber); }
 #b-settings { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: rgba(56,232,255,.06); }
 .seg.four { grid-template-columns: repeat(4, 1fr); }
+
+/* advisor strip close */
+#sentinel .sen-x { flex: none; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: rgba(0,0,0,.25); color: var(--muted); font-size: 16px; margin-left: 4px; }
