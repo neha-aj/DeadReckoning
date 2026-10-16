@@ -7,6 +7,16 @@ Aarav and Mira (and any group of 2+) must reach the **Last Beacon**, a fortified
 Palace Grounds that broadcasts on FM. There are no cell towers, no internet, no open hospitals or shops,
 no flights. A handful of survivors are hiding. The app runs entirely on the phone.
 
+## Live links
+- **Laptop:** https://dead-reckoning-mu.vercel.app
+- **Phone:** https://dead-reckoning-mobile.vercel.app (open in Chrome, then *Add to Home screen* to use it offline)
+
+Both serve the same app over HTTPS, so keys, camera, microphone and GPS work with no certificate setup. On a narrow
+screen it switches to the phone layout (full-screen map, draggable bottom sheet) by itself.
+
+To put a new version live: `node tools/deploy.mjs` (both links), or `node tools/deploy.mjs laptop` / `phone`.
+The first time on a computer, sign in once with `npx vercel login`.
+
 ## Run it
 ```bash
 node tools/serve.mjs 5290

@@ -1,0 +1,4 @@
+# Only the app goes online: build tools, raw OpenStreetMap data and the local certificate stay here.
+/tools/
+/data/
+/README.md
